@@ -7,8 +7,14 @@ import { ThemeProvider } from 'next-themes'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PlaceMentor — Your AI Placement Coach',
-  description: 'AI-powered placement preparation platform for students',
+  title: 'PlaceMentor — AI Placement Coach',
+  description: 'AI-powered placement preparation platform. Analyze your resume, track GitHub & LeetCode, and get company-specific prep plans.',
+  keywords: ['placement preparation', 'AI resume analyzer', 'LeetCode tracker', 'campus placement', 'interview preparation'],
+  openGraph: {
+    title: 'PlaceMentor — AI Placement Coach',
+    description: 'AI-powered placement preparation for students',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

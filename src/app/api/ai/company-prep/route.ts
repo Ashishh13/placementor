@@ -18,7 +18,30 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const prompt = buildCompanyPrompt({ companyName, role, difficulty, profile })
+    // Fetch real community experiences for RAG
+let communityContext = ''
+try {
+  const searchRes = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/community/search?company=${encodeURIComponent(companyName)}&query=${encodeURIComponent(role)}`
+  )
+  const { experiences } = await searchRes.json()
+  if (experiences && experiences.length > 0) {
+    communityContext = `
+## REAL STUDENT EXPERIENCES FROM PLACEMENTOR COMMUNITY
+${experiences.map((e: Record<string, unknown>, i: number) => `
+Experience ${i + 1}:
+- Role: ${e.role} | Year: ${e.year} | Package: ${e.package_lpa} LPA
+- OA Pattern: ${e.oa_pattern}
+- Questions Asked: ${(e.questions_asked as string[])?.join(', ')}
+- Tips from placed student: ${e.tips}
+- Difficulty: ${e.difficulty}
+`).join('\n')}
+Use these REAL experiences to make your prep plan more accurate.
+`
+  }
+} catch { /* no community data yet, continue normally */ }
+
+const prompt = buildCompanyPrompt({ companyName, role, difficulty, profile, communityContext })
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
@@ -63,13 +86,15 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function buildCompanyPrompt({ companyName, role, difficulty, profile }: {
+function buildCompanyPrompt({ companyName, role, difficulty, profile, communityContext }: {
   companyName: string
   role: string
   difficulty: string
   profile: Record<string, unknown> | null
+  communityContext: string
 }) {
   return `
+  ${communityContext}
 Generate a comprehensive interview preparation plan for:
 Company: ${companyName}
 Role: ${role}

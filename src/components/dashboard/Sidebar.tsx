@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, User, FileSearch, Building2,
-  TrendingUp, Sparkles, LogOut, ChevronRight
+  TrendingUp, Users, Sparkles, LogOut, ChevronRight
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/profile', label: 'My Profile', icon: User },
   { href: '/analyze', label: 'AI Analyzer', icon: FileSearch },
   { href: '/company-prep', label: 'Company Prep', icon: Building2 },
+  { href: '/community', label: 'Community', icon: Users },
   { href: '/progress', label: 'Progress', icon: TrendingUp },
 ]
 

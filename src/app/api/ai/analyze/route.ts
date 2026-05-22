@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,12 +18,25 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-
     const prompt = buildPrompt({ profile, resumeText, githubData, leetcodeData })
 
-    const result = await model.generateContent(prompt)
-    const raw = result.response.text()
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are PlaceMentor AI, an elite placement coach and technical recruiter with 15+ years of experience at top tech companies like Google, Microsoft, Amazon. You give brutally honest, deeply specific, and highly actionable feedback. You NEVER give generic advice. Every suggestion must be specific to THIS student. You always respond in valid JSON only — no markdown, no preamble, no text outside JSON.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+    })
+
+    const raw = completion.choices[0]?.message?.content ?? ''
     const clean = raw.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
 
@@ -58,9 +71,7 @@ function buildPrompt({ profile, resumeText, githubData, leetcodeData }: {
   leetcodeData: Record<string, unknown> | null
 }) {
   return `
-You are PlaceMentor AI, an elite placement coach and technical recruiter with 15+ years of experience at top tech companies like Google, Microsoft, Amazon. You give brutally honest, deeply specific, and highly actionable feedback. You NEVER give generic advice. Every suggestion must be specific to THIS student's profile. You always respond in valid JSON only — no markdown, no preamble, no explanation outside JSON.
-
-Analyze this student's complete placement profile:
+Analyze this student's complete placement profile and provide a comprehensive assessment.
 
 ## STUDENT PROFILE
 - Name: ${profile?.full_name ?? 'Unknown'}
@@ -80,9 +91,9 @@ ${githubData ? JSON.stringify(githubData, null, 2) : 'GitHub not connected'}
 ## LEETCODE STATS
 ${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : 'LeetCode not connected'}
 
-Cross-reference what they CLAIM on their resume vs what their GitHub and LeetCode ACTUALLY show. Call out inconsistencies. Be direct and specific.
+Cross-reference resume claims vs GitHub and LeetCode reality. Be direct and specific.
 
-Respond ONLY with this exact JSON structure, no other text:
+Respond ONLY with this exact JSON, no other text whatsoever:
 {
   "overallScore": <number 0-100>,
   "scoreBreakdown": {
@@ -92,37 +103,31 @@ Respond ONLY with this exact JSON structure, no other text:
     "dsaReadiness": <0-100>,
     "profileCompleteness": <0-100>
   },
-  "strengths": [<3-5 specific strength strings>],
-  "weaknesses": [<3-5 specific weakness strings>],
+  "strengths": ["<specific strength>"],
+  "weaknesses": ["<specific weakness>"],
   "suggestions": {
-    "immediate": [
-      { "title": "<action title>", "detail": "<very specific 2-3 sentence action>", "priority": "high" }
-    ],
-    "shortTerm": [
-      { "title": "<action title>", "detail": "<specific action for next 2-4 weeks>", "priority": "medium" }
-    ],
-    "longTerm": [
-      { "title": "<action title>", "detail": "<strategic action for 1-3 months>", "priority": "low" }
-    ]
+    "immediate": [{ "title": "<title>", "detail": "<specific 2-3 sentence action>", "priority": "high" }],
+    "shortTerm": [{ "title": "<title>", "detail": "<specific action>", "priority": "medium" }],
+    "longTerm": [{ "title": "<title>", "detail": "<strategic action>", "priority": "low" }]
   },
   "resumeFeedback": {
     "format": "<specific formatting feedback>",
     "content": "<specific content feedback>",
-    "missingElements": [<list of missing sections or info>],
-    "keywordsToAdd": [<ATS keywords relevant to their target role>]
+    "missingElements": ["<missing item>"],
+    "keywordsToAdd": ["<ATS keyword>"]
   },
   "dsaFeedback": {
-    "currentLevel": "<assessment of their DSA level>",
-    "topicsToFocus": [<specific DSA topics to study>],
-    "targetProblems": "<specific problem count and difficulty target>"
+    "currentLevel": "<DSA level assessment>",
+    "topicsToFocus": ["<topic>"],
+    "targetProblems": "<problem count and difficulty target>"
   },
   "projectFeedback": {
-    "assessment": "<honest assessment of their projects>",
-    "improvements": [<specific improvements for existing projects>],
-    "suggestedProjects": [<2-3 specific project ideas for their target role>]
+    "assessment": "<honest project assessment>",
+    "improvements": ["<specific improvement>"],
+    "suggestedProjects": ["<project idea>"]
   },
-  "placementReadiness": "<overall honest placement readiness summary in 2-3 sentences>",
-  "estimatedTimeToReady": "<realistic time estimate to be placement-ready>"
+  "placementReadiness": "<2-3 sentence readiness summary>",
+  "estimatedTimeToReady": "<realistic time estimate>"
 }
 `
 }

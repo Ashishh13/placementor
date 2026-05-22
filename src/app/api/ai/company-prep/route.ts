@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,12 +18,25 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-
     const prompt = buildCompanyPrompt({ companyName, role, difficulty, profile })
 
-    const result = await model.generateContent(prompt)
-    const raw = result.response.text()
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are PlaceMentor AI, an elite placement coach. Generate highly specific, accurate interview preparation plans. Always respond with valid JSON only — no markdown, no preamble, no text outside JSON.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 5000,
+    })
+
+    const raw = completion.choices[0]?.message?.content ?? ''
     const clean = raw.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
 
@@ -57,23 +70,23 @@ function buildCompanyPrompt({ companyName, role, difficulty, profile }: {
   profile: Record<string, unknown> | null
 }) {
   return `
-You are PlaceMentor AI, an elite placement coach. Generate a comprehensive, highly specific interview preparation plan based on your knowledge of ${companyName}'s hiring process.
+Generate a comprehensive interview preparation plan for:
+Company: ${companyName}
+Role: ${role}
+Prep Intensity: ${difficulty}
 
 Student Profile:
 - Skills: ${(profile?.skills as string[])?.join(', ') ?? 'Not listed'}
 - Branch: ${profile?.branch ?? 'CS'}
 - Target Role: ${role}
-- Prep Intensity: ${difficulty}
-
-Generate a detailed prep plan for ${companyName} ${role} position based on well-known interview patterns, common questions, and hiring culture of this company.
 
 Respond ONLY with this exact JSON, no other text:
 {
   "companyOverview": {
     "name": "${companyName}",
-    "about": "<2-3 sentence company description>",
-    "techStack": ["<technologies they use>"],
-    "culture": "<company culture in 1-2 sentences>",
+    "about": "<2-3 sentence description>",
+    "techStack": ["<technology>"],
+    "culture": "<culture description>",
     "hiringDifficulty": "${difficulty}",
     "averagePackage": "<salary range>",
     "interviewRounds": <number>
@@ -83,21 +96,21 @@ Respond ONLY with this exact JSON, no other text:
       "round": <number>,
       "name": "<round name>",
       "description": "<what happens>",
-      "duration": "<estimated duration>",
+      "duration": "<duration>",
       "tips": "<specific tips>"
     }
   ],
   "topicsToCover": [
     {
-      "topic": "<topic name>",
+      "topic": "<topic>",
       "importance": "high|medium|low",
-      "description": "<why this matters for this company>",
-      "resources": ["<specific resource>"]
+      "description": "<why important>",
+      "resources": ["<resource>"]
     }
   ],
   "practiceProblems": [
     {
-      "title": "<problem title or pattern>",
+      "title": "<problem title>",
       "difficulty": "Easy|Medium|Hard",
       "topic": "<DSA topic>",
       "why": "<why this company asks this>"
@@ -106,17 +119,17 @@ Respond ONLY with this exact JSON, no other text:
   "weeklyPlan": [
     {
       "week": <number>,
-      "focus": "<main focus>",
-      "dailyTasks": ["<specific daily task>"],
+      "focus": "<focus>",
+      "dailyTasks": ["<task>"],
       "goal": "<measurable goal>"
     }
   ],
-  "insiderTips": ["<specific tip based on real interview experiences>"],
+  "insiderTips": ["<specific tip>"],
   "dosDonts": {
-    "dos": ["<what to do>"],
-    "donts": ["<what to avoid>"]
+    "dos": ["<do this>"],
+    "donts": ["<avoid this>"]
   },
-  "estimatedPrepTime": "<realistic prep time in weeks>",
+  "estimatedPrepTime": "<weeks>",
   "readinessScore": <0-100>
 }
 `

@@ -13,7 +13,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const features = [
   {
     icon: FileSearch, title: 'AI Resume Analyzer',
-    desc: 'Claude AI reads your resume and cross-references your GitHub and LeetCode to give brutally honest, specific feedback.',
+    desc: 'GROQ AI reads your resume and cross-references your GitHub and LeetCode to give brutally honest, specific feedback.',
     color: 'from-violet-500 to-purple-600',
   },
   {
@@ -38,14 +38,14 @@ const features = [
   },
   {
     icon: Globe, title: 'Live Web Search',
-    desc: 'AI searches the internet in real-time to get the latest interview questions and hiring trends.',
+    desc: 'GROQ AI searches the internet in real-time to get the latest interview questions and hiring trends.',
     color: 'from-indigo-500 to-violet-600',
   },
 ]
 
 const steps = [
   { step: '01', title: 'Create your profile', desc: 'Add your resume, GitHub, LeetCode, and target companies in minutes.' },
-  { step: '02', title: 'Run AI analysis', desc: 'Claude analyzes everything and gives you a detailed placement readiness score.' },
+  { step: '02', title: 'Run AI analysis', desc: 'GROQ AI analyzes everything and gives you a detailed placement readiness score.' },
   { step: '03', title: 'Get your prep plan', desc: 'Pick any company and get a live, personalized interview preparation roadmap.' },
   { step: '04', title: 'Track your growth', desc: 'Save progress snapshots and watch your score improve over time.' },
 ]
@@ -53,7 +53,7 @@ const steps = [
 const stats = [
   { value: '100+', label: 'Companies supported' },
   { value: 'Live', label: 'Web search powered' },
-  { value: 'AI', label: 'Claude powered analysis' },
+  { value: 'AI', label: 'GROQ AI powered analysis' },
   { value: 'Free', label: 'To get started' },
 ]
 
@@ -93,7 +93,7 @@ export default function LandingPage() {
         <motion.div variants={container} initial="hidden" animate="show">
           <motion.div variants={fadeUp}>
             <span className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
-              <Zap className="w-3 h-3" /> Powered by Claude AI + Live Web Search
+              <Zap className="w-3 h-3" /> Powered by GROQ AI + Live Web Search
             </span>
           </motion.div>
 

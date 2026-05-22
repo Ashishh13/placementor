@@ -47,36 +47,53 @@ export default function ProfilePage({ profile, userId }: { profile: Profile | nu
   const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }))
 
   const handleSave = async () => {
-    setSaving(true)
-    const { error } = await supabase
+  setSaving(true)
+  try {
+    const updateData = {
+      id: userId,
+      full_name: form.full_name || null,
+      college: form.college || null,
+      branch: form.branch || null,
+      graduation_year: form.graduation_year ? parseInt(form.graduation_year) : null,
+      bio: form.bio || null,
+      target_role: form.target_role || null,
+      target_companies: form.target_companies
+        ? form.target_companies.split(',').map(s => s.trim()).filter(Boolean)
+        : [],
+      github_username: form.github_username || null,
+      leetcode_username: form.leetcode_username || null,
+      codolio_username: form.codolio_username || null,
+      linkedin_url: form.linkedin_url || null,
+      portfolio_url: form.portfolio_url || null,
+      skills: skills ?? [],
+      resume_url: resumeUrl || null,
+      updated_at: new Date().toISOString(),
+    }
+
+    console.log('Saving profile data:', updateData)
+
+    const { data, error } = await supabase
       .from('profiles')
-      .update({
-        full_name: form.full_name,
-        college: form.college,
-        branch: form.branch,
-        graduation_year: form.graduation_year ? parseInt(form.graduation_year) : null,
-        bio: form.bio,
-        target_role: form.target_role,
-        target_companies: form.target_companies.split(',').map(s => s.trim()).filter(Boolean),
-        github_username: form.github_username,
-        leetcode_username: form.leetcode_username,
-        codolio_username: form.codolio_username,
-        linkedin_url: form.linkedin_url,
-        portfolio_url: form.portfolio_url,
-        skills,
-        resume_url: resumeUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
+      .upsert(updateData)
+      .select()
+
+    console.log('Supabase response:', { data, error })
 
     if (error) {
-      toast.error('Failed to save profile')
-    } else {
-      toast.success('Profile saved!')
-      router.refresh()
+      console.error('Supabase error:', error)
+      toast.error(`Save failed: ${error.message}`)
+      return
     }
+
+    toast.success('Profile saved!')
+    router.refresh()
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    toast.error('Unexpected error saving profile')
+  } finally {
     setSaving(false)
   }
+}
 
   const completionItems = [
     form.full_name, form.college, form.branch,

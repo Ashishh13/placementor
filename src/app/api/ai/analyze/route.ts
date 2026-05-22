@@ -1,8 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,20 +18,15 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
       .single()
 
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
     const prompt = buildPrompt({ profile, resumeText, githubData, leetcodeData })
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: prompt }],
-      system: `You are PlaceMentor AI, an elite placement coach and technical recruiter with 15+ years of experience at top tech companies like Google, Microsoft, Amazon, and startups. You give brutally honest, deeply specific, and highly actionable feedback. You NEVER give generic advice. Every suggestion must be specific to THIS student's profile. You always respond in valid JSON only — no markdown, no preamble.`,
-    })
-
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const result = await model.generateContent(prompt)
+    const raw = result.response.text()
     const clean = raw.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
 
-    // Save to database
     await supabase.from('analyses').insert({
       user_id: user.id,
       type: 'resume',
@@ -42,7 +37,6 @@ export async function POST(req: NextRequest) {
       raw_feedback: raw,
     })
 
-    // Log activity
     await supabase.from('activity_logs').insert({
       user_id: user.id,
       activity_type: 'analysis_run',
@@ -64,7 +58,9 @@ function buildPrompt({ profile, resumeText, githubData, leetcodeData }: {
   leetcodeData: Record<string, unknown> | null
 }) {
   return `
-Analyze this student's complete placement profile and provide a comprehensive, highly specific assessment.
+You are PlaceMentor AI, an elite placement coach and technical recruiter with 15+ years of experience at top tech companies like Google, Microsoft, Amazon. You give brutally honest, deeply specific, and highly actionable feedback. You NEVER give generic advice. Every suggestion must be specific to THIS student's profile. You always respond in valid JSON only — no markdown, no preamble, no explanation outside JSON.
+
+Analyze this student's complete placement profile:
 
 ## STUDENT PROFILE
 - Name: ${profile?.full_name ?? 'Unknown'}
@@ -84,10 +80,9 @@ ${githubData ? JSON.stringify(githubData, null, 2) : 'GitHub not connected'}
 ## LEETCODE STATS
 ${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : 'LeetCode not connected'}
 
-## YOUR TASK
-Provide a deeply specific analysis. Cross-reference what they CLAIM on their resume vs what their GitHub and LeetCode ACTUALLY show. Call out any inconsistencies. Be direct.
+Cross-reference what they CLAIM on their resume vs what their GitHub and LeetCode ACTUALLY show. Call out inconsistencies. Be direct and specific.
 
-Respond ONLY with this exact JSON structure:
+Respond ONLY with this exact JSON structure, no other text:
 {
   "overallScore": <number 0-100>,
   "scoreBreakdown": {

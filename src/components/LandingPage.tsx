@@ -13,7 +13,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const features = [
   {
     icon: FileSearch, title: 'AI Resume Analyzer',
-    desc: 'GROQ AI reads your resume and cross-references your GitHub and LeetCode to give brutally honest, specific feedback.',
+    desc: 'GROQ AI reads your resume and and ensures cross-references your GitHub and LeetCode to give brutally honest, specific feedback.',
     color: 'from-violet-500 to-purple-600',
   },
   {

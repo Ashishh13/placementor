@@ -200,16 +200,22 @@ This project is deployed on **Vercel**. To deploy your own:
 <div align="center">
 
 ### Landing Page
-![Landing](https://via.placeholder.com/800x450/0a0a0f/8b5cf6?text=Landing+Page)
+![Landing](https://github.com/Ashishh13/placementor/issues/1)
 
 ### Dashboard
-![Dashboard](https://via.placeholder.com/800x450/0a0a0f/7c3aed?text=Dashboard)
+![Dashboard](https://github.com/Ashishh13/placementor/issues/2)
 
 ### AI Resume Analyzer
-![Analyzer](https://via.placeholder.com/800x450/0a0a0f/6d28d9?text=AI+Analyzer)
+![Analyzer](https://github.com/Ashishh13/placementor/issues/3)
 
 ### Company Prep
-![Company Prep](https://via.placeholder.com/800x450/0a0a0f/5b21b6?text=Company+Prep)
+![Company Prep](https://github.com/Ashishh13/placementor/issues/4)
+
+### Profile
+![Company Prep](https://github.com/Ashishh13/placementor/issues/5)
+
+### Progress
+![Company Prep](https://github.com/Ashishh13/placementor/issues/5)
 
 </div>
 
@@ -245,8 +251,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 **Ashish Singh**
 - College: Shri Ramdeobaba College of Engineering and Management, Nagpur
 - Branch: Computer Science & Engineering
-- GitHub: [@YOUR_GITHUB](https://github.com/YOUR_GITHUB)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/YOUR_LINKEDIN)
+- GitHub: [@YOUR_GITHUB](https://github.com/Ashishh13)
+- LinkedIn: [Your LinkedIn](https://www.linkedin.com/in/ashish-singh-82311639a)
 
 ---
 
